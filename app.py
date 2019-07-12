@@ -10,7 +10,7 @@ grid = [
 
 
 # set the score of the game
-score = [0, 0]
+# score = [0, 0]
 
 
 # a function to print the grid
@@ -33,18 +33,23 @@ def displayGrid(grid=grid):
             horizontal_line + space + str(grid[2][2]) +  "]" + vertical_line + "\n"
     # board += (horizontal_line * 7) + "-\n"
 
-    print(board)
+    printf(board)
 
 
+# after we set token we call displayGrid so that it won't be called explicitly
 """ moves a token to a position when the game starts, using the x_index and y_index. """
 def setToken(x_index, y_index, token='#', grid=grid):
     if checkBounds(x_index, y_index):
         if isPositionEmpty(x_index, y_index):
             grid[x_index][y_index] = token
+            printf("token set at position ({}, {})".format(x_index, y_index))
         else:
-            print("position ({}, {}) is filled".format(x_index, y_index))
+            printf("position ({}, {}) is filled".format(x_index, y_index))
     else:
-        print("position ({}, {}) is out of bounds".format(x_index, y_index))
+        printf("position ({}, {}) is out of bounds".format(x_index, y_index))
+    
+    # call displayGrid after the output of setToken
+    displayGrid()
 
 
 # check if position is empty before you set a token there
@@ -52,9 +57,8 @@ def setToken(x_index, y_index, token='#', grid=grid):
 def isPositionEmpty(x_index, y_index, grid=grid):
     if grid[x_index][y_index] == ".":
         return True
-
-    makeSuggestion(x_index, y_index)
-    return False
+    else:
+        return False
 
 
 # check bounds - check the min-max of position index
@@ -63,22 +67,40 @@ def checkBounds(x_index, y_index, grid=grid):
     grid_size = len(grid) - 1
     if (x_index >= 0 and x_index <= grid_size) and (y_index >= 0 and y_index <= grid_size):
         return True
-    
-    return False
+    else:
+        return False
 
 
 # move token
 """ move token to a new position """
 def moveToken(x_index, y_index, nx_index, ny_index, token='#', grid=grid):
     if checkBounds(x_index, y_index) and checkBounds(nx_index, ny_index):
-        if not isPositionEmpty(x_index, y_index) and isPositionEmpty(nx_index, ny_index):
-            grid[x_index][y_index] = "."
-            grid[nx_index][ny_index] = token
+        if isPositionEmpty(x_index, y_index):
+            printf("can not move from position ({}, {}), there is no token there".format(x_index, y_index))
+
+            # make a suggestion
+            makeSuggestion(x_index, y_index)
+
         else:
-            print("can not move from position ({}, {}) to ({}, {}), \
-                there may be a piece at latter or none at former".format(x_index, y_index,nx_index, ny_index))
+            if isPositionEmpty(nx_index, ny_index):
+                grid[x_index][y_index] = "."
+                grid[nx_index][ny_index] = token
+
+                printf("moved from position ({}, {}) to ({}, {})".format(x_index, y_index, nx_index, ny_index))
+
+                # display grid
+                displayGrid()
+
+                # check if there is a win after a move and restart
+                if checkWin():
+                    printf("There is a win")
+
+                    restart()
+            else:
+                printf("can not move to position ({}, {}), there is a token there".format(nx_index, ny_index))
+            
     else:
-        print("position ({}, {}) or ({}, {}) is out of bounds".format(x_index, y_index, nx_index, ny_index))
+        printf("position ({}, {}) or ({}, {}) is out of bounds".format(x_index, y_index, nx_index, ny_index))
 
 
 # restart the game
@@ -90,6 +112,7 @@ def restart(grid=grid):
         for y in range(grid_size):
             grid[x][y] = "."
     
+    # display grid after restart
     displayGrid()
 
 
@@ -99,52 +122,76 @@ def restart(grid=grid):
 def makeSuggestion(x_index, y_index, grid=grid):
     grid_size = len(grid)
 
-    print("some moves you could make")
+    printf("some moves you could make")
+
     for x in range(grid_size):
         for y in range(grid_size):
             if x_index == x and y_index == y:
                 continue
             else:
-                print("position ({}, {})".format(x, y))
+                printf("({}, {})".format(x, y), end="")
+    
+    printf('')
                 
     
 # check whether there is a win
+# at diagonals, the indices are the same
+# check if isPositionEmpty and has token
 """ when tokens are on row0, row1, row2, col0, col1, col2, diag00 or diag02 then there is a win """
-def checkWin():
-    pass
+def checkWin(grid=grid):
+    # row0
+    if not isPositionEmpty(0, 0) and not isPositionEmpty(0, 1) and not isPositionEmpty(0, 2):
+        return True
+    # row1
+    elif not isPositionEmpty(1, 0) and not isPositionEmpty(1, 1) and not isPositionEmpty(1, 2):
+        return True
+    # row2
+    elif not isPositionEmpty(2, 0) and not isPositionEmpty(2, 1) and not isPositionEmpty(2, 2):
+        return True
+    # col0
+    elif not isPositionEmpty(0, 0) and not isPositionEmpty(1, 0) and not isPositionEmpty(2, 0):
+        return True
+    # col1
+    elif not isPositionEmpty(0, 1) and not isPositionEmpty(1, 1) and not isPositionEmpty(2, 1):
+        return True
+    # col2
+    elif not isPositionEmpty(0, 2) and not isPositionEmpty(1, 2) and not isPositionEmpty(2, 2):
+        return True
+    # diag00
+    elif not isPositionEmpty(0, 0) and not isPositionEmpty(1, 1) and not isPositionEmpty(2, 2):
+        return True
+    # diag02
+    elif not isPositionEmpty(0, 2) and not isPositionEmpty(1, 1) and not isPositionEmpty(2, 0):
+        return True
+    else:
+        return False
 
-    
+
+# quit/exit
+""" kill the program """
+def quit():
+    exit(0);
+
+
+# write the output into a file
+def printf(text, file_name = "output.txt"):
+    with open(file_name, "a+") as f:
+        print(text, file=f)
+
+
+
 # start the program
 """ call start to start the program """
 def start():
-    # print(grid)
-
-    # displayGrid(grid)
-
-    # setToken(0,1, '#')
-    # displayGrid()
-    # setToken(0,2, '#')
-    # displayGrid()
-
-    # setToken(0,1, '#')
-    # displayGrid()
-    # setToken(0,1, '#')
-    # displayGrid()
-
+    printf("#" * 50)
     displayGrid()
-    # setToken(0,1)
-    # displayGrid()
-    # setToken(0,1)
-    # displayGrid()
-    # setToken(0,3)
-    # displayGrid()
-    setToken(0,0)
-    displayGrid()
-    moveToken(0, 0, 0, 1)
-    displayGrid()
-    moveToken(0, 1, 2, 1)
-    displayGrid()
-    restart()
+    setToken(1, 0)
+    moveToken(1, 0, 1, 1)
+    setToken(1, 0)
+    setToken(2, 0)
+    moveToken(1,1, 0, 1)
+    moveToken(0, 1, 0, 2)
+    moveToken(1, 0, 1, 1)
 
 
 start()
